@@ -1,13 +1,28 @@
 import { usersDb } from '../db';
 import { UserForm } from '../types/users';
 
-/*
- * if you need to make calls to additional tables, data stores (Redis, for example),
- * or call an external endpoint as part of creating the blogpost, add them to this service
- */
-const createUser = async (user: UserForm) => {
+enum SortingOrder {
+  ASCENDING,
+  DESCENDING
+}
+
+interface ISorter {
+  field: string;
+  order: SortingOrder;
+}
+
+interface IPagination {
+  quantityPerPage: number;
+  pageNumber: number;
+}
+
+const getUsers = async (
+  filters?: string[],
+  sorters?: ISorter[],
+  pagination?: IPagination
+) => {
   try {
-    return await usersDb.usersDb(user);
+    return await usersDb.getUsers();
   } catch (e) {
     let msg;
     if (typeof e === 'string') {
@@ -19,4 +34,32 @@ const createUser = async (user: UserForm) => {
   }
 };
 
-export default { createUser };
+const getUserById = async (userId: number) => {
+  try {
+    return await usersDb.getUserById(userId);
+  } catch (e) {
+    let msg;
+    if (typeof e === 'string') {
+      msg = e.toUpperCase(); // works, `e` narrowed to string
+    } else if (e instanceof Error) {
+      msg = e.message; // works, `e` narrowed to Error
+    }
+    throw new Error(msg);
+  }
+};
+
+const createUser = async (user: UserForm) => {
+  try {
+    return await usersDb.createUser(user);
+  } catch (e) {
+    let msg;
+    if (typeof e === 'string') {
+      msg = e.toUpperCase(); // works, `e` narrowed to string
+    } else if (e instanceof Error) {
+      msg = e.message; // works, `e` narrowed to Error
+    }
+    throw new Error(msg);
+  }
+};
+
+export default { getUsers, getUserById, createUser };

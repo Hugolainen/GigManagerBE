@@ -7,10 +7,14 @@ import createError from 'http-errors';
 const routes = express.Router();
 
 routes.get('/', (req, res) => {
-  const httpError = createError(500, 'test unknown');
-  throw httpError;
-  //logger.info('App is working');
-  res.send('App is working');
+  try {
+    logger.info('App is working');
+    res.send('App is working');
+  } catch (error) {
+    const httpError = createError(500, 'App is not working');
+    logger.error('App is working: ', error);
+    throw httpError;
+  }
 });
 routes.use('/users', userRoutes);
 

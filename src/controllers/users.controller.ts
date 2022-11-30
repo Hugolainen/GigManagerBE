@@ -1,30 +1,58 @@
-import { error } from 'console';
 import { userServices } from '../services';
 import { Request, Response, NextFunction } from 'express';
+import { generateError, handleError } from '../utils/errorUtils';
+import { logger } from '../utils/logger';
+import { User } from '@prisma/client';
 
-const { createUser } = userServices;
+const getUser = async (req: Request, res: Response, next: NextFunction) => {
+  const userId = req.params.userId;
+  try {
+    const user: User = await userServices.getUserById(userId);
 
-/*
- * call other imported services, or same service but different functions here if you need to
+    if (!user) {
+      generateError(404, 'User does not exist');
+    }
+
+    logger.info('Fetched user: ', user.id);
+    res.send(user);
+    next();
+  } catch (e) {
+    handleError(e);
+  }
+};
+
+const getUsers = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const users: User[] = await userServices.getUsers();
+
+    if (!users) {
+      generateError(404, 'User does not exist');
+    }
+
+    logger.info('Fetched user: ', users.map((user) => user.id).toString());
+    res.send(users);
+    next();
+  } catch (e) {
+    handleError(e);
+  }
+};
+
+/**
+ * Post User
+ * @param req
+ * @param res
+ * @param next
  */
 const postUser = async (req: Request, res: Response, next: NextFunction) => {
   const user = req.body;
   try {
-    await createUser(user);
-    // other service call (or same service, different function can go here)
-    // i.e. - await generateBlogpostPreview()
+    await userServices.createUser(user);
+    logger.info('Created new user: ', user);
     res.sendStatus(201);
     next();
   } catch (e) {
-    let msg;
-    if (typeof e === 'string') {
-      msg = e.toUpperCase(); // works, `e` narrowed to string
-    } else if (e instanceof Error) {
-      msg = e.message; // works, `e` narrowed to Error
-    }
-    console.log(msg);
-    res.sendStatus(500) && next(error);
+    handleError(e);
   }
 };
 
-export default { postUser };
+export default { getUsers, getUser, postUser };
