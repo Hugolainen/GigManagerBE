@@ -3,6 +3,7 @@
 
 generator client {
   provider = "prisma-client-js"
+  // output = "../src/generated/client"
 }
 
 datasource db {
@@ -11,8 +12,8 @@ datasource db {
 }
 
 model ServiceProvider {
-  serviceProviderId String  @id @default(uuid())
-  name              String  @unique
+  serviceProviderId String             @id @default(uuid())
+  name              String             @unique
   users             User[]
   customers         Customer[]
   loadingPlaces     LoadingPlace[]
@@ -27,6 +28,7 @@ enum UserType {
   supervisor
   driver
 }
+
 enum UserStatus {
   pending
   active
@@ -34,54 +36,64 @@ enum UserStatus {
 }
 
 model User {
-  userId            String  @id @default(uuid())
+  userId            String          @id @default(uuid())
   serviceProvider   ServiceProvider @relation(fields: [serviceProviderId], references: [serviceProviderId])
-  serviceProviderId String 
-  name              String  @unique
+  serviceProviderId String
+  username          String          @unique
   firstName         String
   lastName          String
-  email             String
+  email             String 
   password          String
   type              UserType
   status            UserStatus
+  driver            Driver?
+}
+
+model Driver {
+  user   User   @relation(fields: [userId], references: [userId])
+  userId String @unique
+  tasks  Task[]
 }
 
 enum CustomerType {
   company
   private
 }
+
 model Customer {
-  customerId          String  @id @default(uuid())
-  serviceProviders    ServiceProvider[]
-  name                String  @unique
-  firstName           String
-  lastName            String
-  email               String
-  password            String
-  customerType        CustomerType
-  loadingPlaces       LoadingPlace[]
+  customerId       String            @id @default(uuid())
+  serviceProviders ServiceProvider[]
+  name             String            @unique
+  contactFirstName String
+  contactLastName  String
+  contactEmail     String
+  password         String
+  customerType     CustomerType
+  loadingPlaces    LoadingPlace[]
 }
 
 enum LoadingPlaceType {
   loading
   unloading
 }
+
 enum LoadingPlaceStatus {
   company
   private
 }
+
 model LoadingPlace {
-  loadingPlaceId    String  @id @default(uuid())
-  serviceProvider   ServiceProvider @relation(fields: [serviceProviderId], references: [serviceProviderId])
-  serviceProviderId String 
+  loadingPlaceId    String             @id @default(uuid())
+  serviceProvider   ServiceProvider    @relation(fields: [serviceProviderId], references: [serviceProviderId])
+  serviceProviderId String
   name              String
   type              LoadingPlaceType
   address           String
   contactPerson     String
   phone             String
   email             String
-  customer          Customer @relation(fields: [customerId], references: [customerId])
-  customerId        String 
+  customer          Customer           @relation(fields: [customerId], references: [customerId])
+  customerId        String
   yTunnus           String
   placeCode         String
   additionalNote    String
@@ -89,8 +101,8 @@ model LoadingPlace {
   coordLatitude     Int
   coordLongitude    Int
   status            LoadingPlaceStatus
-  tasks Task[]  @relation("loadingPlace")
-  tasks2 Task[]  @relation("unloadingPlace")
+  loadingTasks      Task[]             @relation("loadingPlace")
+  unloadingTasks    Task[]             @relation("unloadingPlace")
 }
 
 enum TaskStatus {
@@ -98,19 +110,20 @@ enum TaskStatus {
   loaded
   unloaded
 }
+
 model Task {
-  taskId                String  @id @default(uuid())
-  serviceProvider       ServiceProvider @relation(fields: [serviceProviderId], references: [serviceProviderId])
+  taskId                String            @id @default(uuid())
+  serviceProvider       ServiceProvider   @relation(fields: [serviceProviderId], references: [serviceProviderId])
   serviceProviderId     String
-  loadingPlace          LoadingPlace @relation("loadingPlace", fields: [loadingPlaceId], references: [loadingPlaceId])
+  loadingPlace          LoadingPlace      @relation("loadingPlace", fields: [loadingPlaceId], references: [loadingPlaceId])
   loadingPlaceId        String
-  unloadingPlace        LoadingPlace @relation("unloadingPlace", fields: [unloadingPlaceId], references: [loadingPlaceId])
+  unloadingPlace        LoadingPlace      @relation("unloadingPlace", fields: [unloadingPlaceId], references: [loadingPlaceId])
   unloadingPlaceId      String
   // transfertCompanyId String [ref: > TransfertCompanies.transfertCompanyId]
-  optPlannedLoadingTime String
+  optPlannedLoadingTime DateTime
   optLicencePlate       String
-  //driver                User @relation(fields: [optDriver], references: [userId])
-  optDriver             String
+  optDriver             Driver            @relation(fields: [optDriverId], references: [userId])
+  optDriverId           String
   note                  String
   status                TaskStatus
   products              Product[]
@@ -121,6 +134,7 @@ enum ProductType {
   product
   service
 }
+
 enum ProductUnit {
   kg
   t
@@ -128,12 +142,14 @@ enum ProductUnit {
   pieces
   h
 }
+
 enum ProductStatus {
   active
   inactive
 }
+
 model Product {
-  productId                 String  @id @default(uuid())
+  productId                 String          @id @default(uuid())
   serviceProvider           ServiceProvider @relation(fields: [serviceProviderId], references: [serviceProviderId])
   serviceProviderId         String
   name                      String
@@ -152,16 +168,16 @@ model Product {
   POPcombo                  String // from API (should be an [])
   packageType               String // from API
   productForm               String // from API
-  optAdditionalReportField String
+  optAdditionalReportField  String
   UNcode                    String // from API
   status                    ProductStatus
   tasks                     Task[]
 }
 
 model ShippingDocument {
-  shippingDocumentId  String  @id @default(uuid())
-  serviceProvider     ServiceProvider @relation(fields: [serviceProviderId], references: [serviceProviderId])
-  serviceProviderId   String
-  task                Task  @relation(fields: [taskId], references: [taskId])
-  taskId              String  @unique
+  shippingDocumentId String          @id @default(uuid())
+  serviceProvider    ServiceProvider @relation(fields: [serviceProviderId], references: [serviceProviderId])
+  serviceProviderId  String
+  task               Task            @relation(fields: [taskId], references: [taskId])
+  taskId             String          @unique
 }
